@@ -11,7 +11,6 @@ metadata:
   openclaw:
     emoji: "🔐"
     homepage: https://github.com/IgorIvanter/headless-oauth
-    os: [linux]
     requires:
       bins: []
       env: []
