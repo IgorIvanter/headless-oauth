@@ -3,10 +3,11 @@ name: headless-oauth
 description: >
   Authorize any OAuth CLI on a headless server (no browser). Use when setting up
   CLI tools that require OAuth login on a VPS or server without a display —
-  gog (Google Workspace), gh (GitHub CLI), gcloud, Spotify, Twitter, and more.
-  Implements the generate-URL-on-server / open-in-local-browser / paste-back pattern
-  and the device-flow pattern. Includes a full setup guide for gog (Google Workspace).
-version: 1.0.0
+  gog (Google Workspace), gh (GitHub CLI), gcloud, mcporter (MCP servers), and more.
+  Implements three patterns: generate-URL / paste-back, device flow, and manual
+  callback relay (for tools that start a local HTTP callback server). Includes a
+  full setup guide for gog (Google Workspace).
+version: 1.1.0
 metadata:
   openclaw:
     emoji: "🔐"
@@ -20,10 +21,22 @@ metadata:
 
 Authorize CLI tools that require OAuth on a headless server — no browser needed on the server side.
 
-## The Problem
+## ⚠️ Agent Context: You Are on a Remote Server
 
-OAuth requires a browser: open URL → log in → grant permissions → get token.
-On a headless VPS, step one is impossible. Most CLIs hang or crash with an unhelpful error.
+**You (the agent) are running on a remote VPS. The user is on a separate local machine with a browser.**
+
+This means:
+- You cannot open a browser yourself
+- `localhost` and `127.0.0.1` on the server are NOT accessible from the user's browser
+- The user must open all auth URLs on their own machine
+- When a redirect goes to `http://127.0.0.1:PORT/callback?code=...`, it will **fail to load** in the user's browser — that is expected and normal
+- The user should copy the full URL from the address bar (even if the page shows an error) and send it to you
+- You then forward that URL to the waiting server process via `curl`
+
+Always make this explicit when asking the user to authorize. Example:
+> "Open this URL in your browser, log in, and approve. The page will likely fail to load — that's fine. Copy the full URL from the address bar and send it to me."
+
+---
 
 ## The Pattern
 
@@ -138,8 +151,37 @@ If a CLI supports device flow (prints a short code + URL):
 
 ---
 
+## Manual Callback Relay (mcporter, custom OAuth servers)
+
+Some tools (e.g. `mcporter`) start a local HTTP server on the server to catch the OAuth callback,
+but the user's browser can't reach `127.0.0.1` on the remote server.
+
+**How to handle it:**
+
+1. Start the auth command with a long timeout so it doesn't expire:
+   ```bash
+   MCPORTER_OAUTH_TIMEOUT_MS=300000 mcporter auth <server> --log-level info
+   ```
+2. The tool prints a line like:
+   ```
+   If the browser did not open, visit https://... manually.
+   ```
+   Send that URL to the user.
+3. Tell the user:
+   > "Open this URL, log in and approve. The page will fail to load — that's normal. Copy the full URL from the address bar and send it to me."
+4. The user sends back something like:
+   `http://127.0.0.1:PORT/callback?code=...&state=...`
+5. Forward it to the waiting server with curl:
+   ```bash
+   curl -s "http://127.0.0.1:PORT/callback?code=...&state=..."
+   ```
+6. The tool receives the code, exchanges it for a token, and completes authorization.
+
+---
+
 ## Applying This Pattern to Any CLI
 
 1. Check `--help` for flags like `--no-launch-browser`, `--remote`, `--manual`, or `--headless`
 2. Check docs for "device flow" or "offline access"
-3. If none exist: use `ssh -L` port forwarding to tunnel the callback to your local machine
+3. If the tool starts a local callback server but has no headless flag — use the Manual Callback Relay pattern above
+4. If none of the above work: use `ssh -L` port forwarding to tunnel the callback to your local machine
