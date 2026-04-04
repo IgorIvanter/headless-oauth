@@ -4,18 +4,8 @@ Full setup guide for gog v0.12.0 on Linux VPS.
 
 ## Installation
 
-```bash
-# Check latest version at https://github.com/steipete/gogcli/releases
-VERSION=0.12.0
-curl -fsSL "https://github.com/steipete/gogcli/releases/download/v${VERSION}/gogcli_${VERSION}_linux_amd64.tar.gz" \
-  -o /tmp/gog.tar.gz
-
-# Verify the download (check the release page for checksums)
-sha256sum /tmp/gog.tar.gz
-
-tar -xzf /tmp/gog.tar.gz -C /usr/local/bin/ gog
-gog --version
-```
+Install gog CLI following the official instructions:
+https://github.com/steipete/gogcli
 
 ## Google Cloud Console Setup
 
