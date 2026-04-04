@@ -2,7 +2,7 @@
 
 > **AgentSkill for [OpenClaw](https://openclaw.ai)** — Authorize any OAuth CLI on a headless server, no browser required.
 
-[![clawhub](https://img.shields.io/badge/clawhub-headless--oauth-blue?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0tMSAxNHYtNEg3bDUtOHY0aDRsLTUgOHoiLz48L3N2Zz4=)](https://clawhub.ai/skills/headless-oauth)
+[![clawhub](https://img.shields.io/badge/clawhub-headless--oauth-blue)](https://clawhub.ai/skills/headless-oauth)
 [![License: MIT-0](https://img.shields.io/badge/License-MIT--0-green.svg)](https://opensource.org/licenses/MIT-0)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-compatible-purple)](https://openclaw.ai)
 

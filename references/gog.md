@@ -5,8 +5,14 @@ Full setup guide for gog v0.12.0 on Linux VPS.
 ## Installation
 
 ```bash
-# Download binary
-curl -fsSL https://github.com/steipete/gogcli/releases/download/v0.12.0/gogcli_0.12.0_linux_amd64.tar.gz -o /tmp/gog.tar.gz
+# Check latest version at https://github.com/steipete/gogcli/releases
+VERSION=0.12.0
+curl -fsSL "https://github.com/steipete/gogcli/releases/download/v${VERSION}/gogcli_${VERSION}_linux_amd64.tar.gz" \
+  -o /tmp/gog.tar.gz
+
+# Verify the download (check the release page for checksums)
+sha256sum /tmp/gog.tar.gz
+
 tar -xzf /tmp/gog.tar.gz -C /usr/local/bin/ gog
 gog --version
 ```
@@ -28,9 +34,11 @@ gog auth credentials set /path/to/credentials.json
 ## Authorize Account (Headless)
 
 ```bash
+# Set keyring password only for the duration of the auth step
+# Do not permanently store this in shell configs or agent env
 export GOG_KEYRING_PASSWORD="your-keyring-password"
 
-# Step 1: generate auth URL
+# Step 1: generate auth URL (run on server)
 gog auth add you@gmail.com \
   --services gmail,calendar,drive,contacts,sheets,docs \
   --remote --step 1
@@ -38,49 +46,42 @@ gog auth add you@gmail.com \
 # Step 1 output: auth_url https://accounts.google.com/o/oauth2/auth?...
 # Open that URL in your local browser, approve permissions.
 # After approval, browser redirects to http://127.0.0.1:PORT/oauth2/callback?code=...&state=...
-# The page won't load — that's fine. Copy the full URL from address bar.
+# The page won't load — that's fine. Copy the full URL from the address bar.
 
-# Step 2: exchange code
+# Step 2: exchange code (run on server)
 gog auth add you@gmail.com \
   --services gmail,calendar,drive,contacts,sheets,docs \
   --remote --step 2 \
   --auth-url "http://127.0.0.1:PORT/oauth2/callback?code=...&state=..."
 ```
 
+> **Security note:** `GOG_KEYRING_PASSWORD` is needed only during the auth step and when running gog commands. Avoid storing it permanently in plain text. Prefer injecting it via your secrets manager, a restricted env file, or an ephemeral shell session.
+
 ## Common Pitfalls
 
 | Problem | Fix |
 |---------|-----|
 | `redirect_uri_mismatch` | Use Desktop app OAuth client, not Web application |
-| `store token: no TTY available` | Set `GOG_KEYRING_PASSWORD` env var |
+| `store token: no TTY available` | Set `GOG_KEYRING_PASSWORD` env var before running the command |
 | `Access blocked` (testing mode) | Add email as test user OR publish the app in consent screen settings |
 | Commands fail without error | Set `GOG_ACCOUNT=you@gmail.com` |
-
-## Persistence (OpenClaw)
-
-Add to shell / OpenClaw env:
-```bash
-export GOG_KEYRING_PASSWORD="openclaw-gog-2026"
-export GOG_ACCOUNT="igor.ivanter@gmail.com"
-```
-
-## Current Setup (igor.ivanter@gmail.com)
-
-- Credentials: `/root/.openclaw/workspace-personal/gog-credentials.json`
-- Keyring: `~/.config/gogcli/`
-- Services: gmail, calendar, drive, contacts, sheets, docs
-- Authorized: 2026-04-04
 
 ## Key Commands
 
 ```bash
+# Set required env vars before running commands
+export GOG_KEYRING_PASSWORD="your-keyring-password"
+export GOG_ACCOUNT="you@gmail.com"
+
 # Calendar
 gog calendar list --limit 10
-gog calendar create primary --summary "Title" --from "2026-04-05T10:00:00+02:00" --to "2026-04-05T11:00:00+02:00"
+gog calendar create primary --summary "Meeting" \
+  --from "2026-04-05T10:00:00+02:00" \
+  --to "2026-04-05T11:00:00+02:00"
 
 # Gmail
 gog gmail list --limit 10
-gog gmail send --to recipient@gmail.com --subject "Subject" --body "Text"
+gog gmail send --to recipient@example.com --subject "Subject" --body "Text"
 
 # Drive
 gog drive list --limit 10
