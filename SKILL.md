@@ -7,7 +7,7 @@ description: >
   Implements three patterns: generate-URL / paste-back, device flow, and manual
   callback relay (for tools that start a local HTTP callback server). Includes a
   full setup guide for gog (Google Workspace).
-version: 1.1.0
+version: 1.2.0
 metadata:
   openclaw:
     emoji: "🔐"
@@ -27,9 +27,9 @@ Authorize CLI tools that require OAuth on a headless server — no browser neede
 
 This means:
 - You cannot open a browser yourself
-- `localhost` and `127.0.0.1` on the server are NOT accessible from the user's browser
+- The server's `localhost` is NOT accessible from the user's browser
 - The user must open all auth URLs on their own machine
-- When a redirect goes to `http://127.0.0.1:PORT/callback?code=...`, it will **fail to load** in the user's browser — that is expected and normal
+- When a redirect goes to a local address like `http://127.0.0.1:PORT/callback?code=...`, it will **fail to load** in the user's browser — that is expected and normal
 - The user should copy the full URL from the address bar (even if the page shows an error) and send it to you
 - You then forward that URL to the waiting server process via `curl`
 
@@ -62,15 +62,11 @@ Most OAuth CLIs support this via flags like:
 
 ## Keyring on Headless Servers
 
-Many CLIs store tokens in a system keyring, which requires a TTY to prompt for a password.
-Fix by setting the keyring password via environment variable **before** running any auth command:
-
-```bash
-export KEYRING_PASSWORD="your-password"        # generic
-export GOG_KEYRING_PASSWORD="your-password"    # gog CLI
-```
-
-> **Security note:** Set this variable only for the duration of the auth step or command — do not store it permanently in shell configs or agent-global environment. Use a secrets manager or ephemeral shell session instead.
+Many CLIs store tokens in a system keyring that requires an interactive terminal session to unlock.
+Check the CLI's documentation for a flag or environment variable that sets the keyring password
+non-interactively. Set it only for the duration of the auth step — do not persist it in shell
+configs or agent-global environment. Prefer injecting it from a secrets manager or an ephemeral
+shell session.
 
 ---
 
@@ -81,9 +77,6 @@ See [`references/gog.md`](references/gog.md) for the full setup guide.
 **Quick reference:**
 
 ```bash
-export GOG_KEYRING_PASSWORD="your-keyring-password"
-export GOG_ACCOUNT="you@gmail.com"
-
 # Step 1: generate auth URL (run on server)
 gog auth add you@gmail.com \
   --services gmail,calendar,drive,contacts,sheets,docs \
@@ -139,30 +132,16 @@ If a CLI supports device flow (prints a short code + URL):
 
 ---
 
-## Troubleshooting
-
-| Error | Fix |
-|-------|-----|
-| `redirect_uri_mismatch` | Use Desktop app OAuth client, not Web application |
-| `store token: no TTY available` | Set the CLI's keyring password env var |
-| `Access blocked` (testing mode) | Add your email as test user in Google consent screen settings |
-| Commands fail silently | Set `GOG_ACCOUNT=you@gmail.com` or equivalent |
-| Token expired | Re-run auth steps; most CLIs handle refresh automatically |
-
----
-
 ## Manual Callback Relay (mcporter, custom OAuth servers)
 
 Some tools (e.g. `mcporter`) start a local HTTP server on the server to catch the OAuth callback,
-but the user's browser can't reach `127.0.0.1` on the remote server.
+but the user's browser can't reach that address on the remote server.
 
 **How to handle it:**
 
-1. Start the auth command with a long timeout so it doesn't expire:
-   ```bash
-   MCPORTER_OAUTH_TIMEOUT_MS=300000 mcporter auth <server> --log-level info
-   ```
-2. The tool prints a line like:
+1. Start the auth command with a longer timeout so it doesn't expire while waiting for the user.
+   Check the tool's docs for a timeout flag or environment variable.
+2. The tool usually prints a message like:
    ```
    If the browser did not open, visit https://... manually.
    ```
@@ -176,6 +155,18 @@ but the user's browser can't reach `127.0.0.1` on the remote server.
    curl -s "http://127.0.0.1:PORT/callback?code=...&state=..."
    ```
 6. The tool receives the code, exchanges it for a token, and completes authorization.
+
+---
+
+## Troubleshooting
+
+| Error | Fix |
+|-------|-----|
+| `redirect_uri_mismatch` | Use Desktop app OAuth client, not Web application |
+| No TTY / keyring unlock fails | Check the CLI's docs for a non-interactive keyring option |
+| `Access blocked` (testing mode) | Add your email as test user in Google consent screen settings |
+| Commands fail silently | Check if the CLI requires an account env var to be set |
+| Token expired | Re-run auth steps; most CLIs handle refresh automatically |
 
 ---
 
