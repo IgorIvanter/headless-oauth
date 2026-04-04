@@ -1,12 +1,15 @@
 ---
 name: headless-oauth
 description: >
-  Authorize any OAuth CLI on a headless server (no browser). Use when setting up
-  CLI tools that require OAuth login on a VPS or server without a display —
-  gog (Google Workspace), gh (GitHub CLI), gcloud, mcporter (MCP servers), and more.
-  Implements three patterns: generate-URL / paste-back, device flow, and manual
-  callback relay (for tools that start a local HTTP callback server).
-version: 1.2.0
+  Authorize any OAuth CLI on a headless server where the agent and the user are on
+  separate machines. Use when a CLI tool requires OAuth login on a VPS or server
+  without a display. Covers three patterns: (1) generate auth URL on server, user
+  opens in local browser, pastes back redirect URL or code; (2) device flow — user
+  enters a short code at a URL, CLI polls automatically; (3) manual callback relay —
+  CLI starts a local HTTP server for the callback, user copies the failed redirect URL
+  from their browser and the agent forwards it via curl. Includes agent-specific
+  guidance on communicating the remote/local split to the user.
+version: 1.3.0
 metadata:
   openclaw:
     emoji: "🔐"
