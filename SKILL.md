@@ -57,7 +57,7 @@ export KEYRING_PASSWORD="your-password"        # generic
 export GOG_KEYRING_PASSWORD="your-password"    # gog CLI
 ```
 
-Add to `~/.bashrc` or your OpenClaw environment config for persistence.
+> **Security note:** Set this variable only for the duration of the auth step or command — do not store it permanently in shell configs or agent-global environment. Use a secrets manager or ephemeral shell session instead.
 
 ---
 
