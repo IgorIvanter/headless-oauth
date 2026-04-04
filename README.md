@@ -30,30 +30,23 @@ This skill teaches your OpenClaw agent exactly how to do this for the most commo
 
 ---
 
-## Supported Tools
+## Three Patterns
 
-| Tool | Method | Guide |
-|------|--------|-------|
-| **gog** (Google Workspace) | `--remote --step 1/2` | [references/gog.md](references/gog.md) |
-| **gh** (GitHub CLI) | Device flow (`--no-launch-browser`) | [SKILL.md](SKILL.md#github-cli--gh) |
-| **gcloud** (Google Cloud) | `--no-launch-browser` | [SKILL.md](SKILL.md#gcloud-google-cloud-cli) |
-| Any OAuth CLI | General pattern | [SKILL.md](SKILL.md#applying-this-pattern-to-any-cli) |
+| Pattern | How it works | Example tools |
+|---------|-------------|---------------|
+| **Generate URL / paste back** | CLI prints auth URL, user opens locally, pastes redirect URL back | gog, gcloud |
+| **Device flow** | CLI prints a short code + URL, user enters code, CLI polls automatically | gh (GitHub CLI) |
+| **Manual callback relay** | CLI starts a local HTTP server for callback; user copies the failed redirect URL from browser, agent forwards it via curl | mcporter, MCP servers |
 
 ---
 
 ## Install
 
 ```bash
-# via clawhub CLI
 npx clawhub@latest install headless-oauth
 ```
 
-Or clone manually:
-
-```bash
-git clone https://github.com/IgorIvanter/headless-oauth.git
-# Place the folder in your OpenClaw workspace/skills/ directory
-```
+Or clone manually and place in your OpenClaw `workspace/skills/` directory.
 
 ---
 
@@ -66,34 +59,13 @@ gh auth login --hostname github.com --git-protocol https --no-launch-browser
 # → Enter the code — gh polls and completes automatically
 ```
 
-## Quick Example: Google Workspace (gog CLI)
-
-```bash
-export GOG_KEYRING_PASSWORD="your-password"
-
-# On server — generates the auth URL
-gog auth add you@gmail.com \
-  --services gmail,calendar,drive,contacts \
-  --remote --step 1
-
-# Open the printed URL locally, approve, copy redirect URL from address bar
-# Then back on server:
-gog auth add you@gmail.com \
-  --services gmail,calendar,drive,contacts \
-  --remote --step 2 \
-  --auth-url "http://127.0.0.1:PORT/oauth2/callback?code=...&state=..."
-```
-
 ---
 
 ## Keyring Note
 
-Many CLIs store tokens in a system keyring, which requires a TTY. On a headless server, set the password via env var:
-
-```bash
-export GOG_KEYRING_PASSWORD="your-keyring-password"
-# Add to ~/.bashrc or your OpenClaw env config
-```
+Some CLIs store tokens in a system keyring that requires an interactive terminal to unlock.
+Check the CLI's documentation for a non-interactive option. Set any required credential
+only for the duration of the auth step — do not persist it in shell configs.
 
 ---
 
@@ -102,9 +74,9 @@ export GOG_KEYRING_PASSWORD="your-keyring-password"
 | Error | Fix |
 |-------|-----|
 | `redirect_uri_mismatch` | Use **Desktop app** OAuth client, not Web application |
-| `store token: no TTY available` | Set the keyring password env var |
+| Keyring unlock fails | Check CLI docs for a non-interactive keyring option |
 | `Access blocked` | Add your email as test user in Google consent screen |
-| Commands fail silently | Set `GOG_ACCOUNT=you@gmail.com` |
+| Commands fail silently | Check CLI docs for a required account identifier option |
 
 ---
 
@@ -112,9 +84,7 @@ export GOG_KEYRING_PASSWORD="your-keyring-password"
 
 ```
 headless-oauth/
-├── SKILL.md              # AgentSkill instructions
-└── references/
-    └── gog.md            # Full gog CLI setup guide (Google Workspace)
+└── SKILL.md    # AgentSkill instructions (all three patterns)
 ```
 
 ---
