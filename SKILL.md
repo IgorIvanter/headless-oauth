@@ -5,8 +5,7 @@ description: >
   CLI tools that require OAuth login on a VPS or server without a display —
   gog (Google Workspace), gh (GitHub CLI), gcloud, mcporter (MCP servers), and more.
   Implements three patterns: generate-URL / paste-back, device flow, and manual
-  callback relay (for tools that start a local HTTP callback server). Includes a
-  full setup guide for gog (Google Workspace).
+  callback relay (for tools that start a local HTTP callback server).
 version: 1.2.0
 metadata:
   openclaw:
@@ -72,28 +71,7 @@ shell session.
 
 ## Google Workspace — gog CLI
 
-See [`references/gog.md`](references/gog.md) for the full setup guide.
-
-**Quick reference:**
-
-```bash
-# Step 1: generate auth URL (run on server)
-gog auth add you@gmail.com \
-  --services gmail,calendar,drive,contacts,sheets,docs \
-  --remote --step 1
-# → prints: auth_url https://accounts.google.com/o/oauth2/auth?...
-
-# Step 2: open URL locally, approve, copy redirect URL from address bar.
-# Then on server:
-gog auth add you@gmail.com \
-  --services gmail,calendar,drive,contacts,sheets,docs \
-  --remote --step 2 \
-  --auth-url "http://127.0.0.1:PORT/oauth2/callback?code=...&state=..."
-
-# Verify
-gog auth list
-gog calendar list --limit 3
-```
+gog supports headless auth via `--remote --step 1/2`. See the [official gog docs](https://github.com/steipete/gogcli) for setup details.
 
 > **Important:** Use **Desktop app** OAuth client type in Google Cloud Console — not Web application.
 > gog uses a random port for the callback, which Web clients reject with `redirect_uri_mismatch`.
