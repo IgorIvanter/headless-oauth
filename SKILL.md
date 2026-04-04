@@ -1,24 +1,20 @@
 ---
 name: headless-oauth
 description: >
-  Authorize CLI tools that require OAuth on a headless server (no browser).
-  Use when setting up any CLI tool that needs OAuth login on a VPS or server
-  without a display — e.g., gog (Google Workspace), gh (GitHub), Spotify CLI,
-  Twitter CLI, etc. Handles the --remote/--no-launch-browser/device-flow patterns:
-  generate auth URL on server, user opens it in a local browser, pastes back the
-  redirect URL or one-time code. Includes full setup guide for gog CLI (Google Workspace).
+  Authorize any OAuth CLI on a headless server (no browser). Use when setting up
+  CLI tools that require OAuth login on a VPS or server without a display —
+  gog (Google Workspace), gh (GitHub CLI), gcloud, Spotify, Twitter, and more.
+  Implements the generate-URL-on-server / open-in-local-browser / paste-back pattern
+  and the device-flow pattern. Includes a full setup guide for gog (Google Workspace).
+version: 1.0.0
 metadata:
   openclaw:
+    emoji: "🔐"
+    homepage: https://github.com/IgorIvanter/headless-oauth
+    os: [linux]
     requires:
       bins: []
-    tags:
-      - oauth
-      - auth
-      - headless
-      - vps
-      - server
-      - google-workspace
-      - cli
+      env: []
 ---
 
 # Headless OAuth
@@ -55,7 +51,7 @@ Most OAuth CLIs support this via flags like:
 ## Keyring on Headless Servers
 
 Many CLIs store tokens in a system keyring, which requires a TTY to prompt for a password.
-Fix by setting the keyring password via environment variable before running any auth command:
+Fix by setting the keyring password via environment variable **before** running any auth command:
 
 ```bash
 export KEYRING_PASSWORD="your-password"        # generic
@@ -82,7 +78,7 @@ gog auth add you@gmail.com \
   --remote --step 1
 # → prints: auth_url https://accounts.google.com/o/oauth2/auth?...
 
-# Step 2: open that URL locally, approve, copy redirect URL from address bar
+# Step 2: open URL locally, approve, copy redirect URL from address bar.
 # Then on server:
 gog auth add you@gmail.com \
   --services gmail,calendar,drive,contacts,sheets,docs \
