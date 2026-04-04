@@ -1,6 +1,6 @@
 # gog CLI — Google Workspace on Headless Server
 
-Full setup guide for gog v0.12.0 on Linux VPS.
+Full setup guide for gog on Linux VPS.
 
 ## Installation
 
@@ -11,23 +11,24 @@ https://github.com/steipete/gogcli
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com) → APIs & Services → Credentials
 2. Create OAuth client → **Desktop app** (NOT Web application — gog uses random ports)
-3. Download `credentials.json`
+3. Download the credentials file
 4. Enable required APIs: Gmail, Calendar, Drive, Contacts, Sheets, Docs
 
 ## Store Credentials
 
 ```bash
 gog auth credentials set /path/to/credentials.json
-# → stored at ~/.config/gogcli/credentials.json
 ```
+
+## Keyring
+
+gog stores tokens in a system keyring. On a headless server, provide the keyring password
+non-interactively using the environment variable documented in gog's README, set for the
+duration of the auth step only.
 
 ## Authorize Account (Headless)
 
 ```bash
-# Set keyring password only for the duration of the auth step
-# Do not permanently store this in shell configs or agent env
-export GOG_KEYRING_PASSWORD="your-keyring-password"
-
 # Step 1: generate auth URL (run on server)
 gog auth add you@gmail.com \
   --services gmail,calendar,drive,contacts,sheets,docs \
@@ -45,24 +46,18 @@ gog auth add you@gmail.com \
   --auth-url "http://127.0.0.1:PORT/oauth2/callback?code=...&state=..."
 ```
 
-> **Security note:** `GOG_KEYRING_PASSWORD` is needed only during the auth step and when running gog commands. Avoid storing it permanently in plain text. Prefer injecting it via your secrets manager, a restricted env file, or an ephemeral shell session.
-
 ## Common Pitfalls
 
 | Problem | Fix |
 |---------|-----|
 | `redirect_uri_mismatch` | Use Desktop app OAuth client, not Web application |
-| `store token: no TTY available` | Set `GOG_KEYRING_PASSWORD` env var before running the command |
-| `Access blocked` (testing mode) | Add email as test user OR publish the app in consent screen settings |
-| Commands fail without error | Set `GOG_ACCOUNT=you@gmail.com` |
+| Keyring unlock fails | Set the keyring password env var (see gog README) |
+| `Access blocked` (testing mode) | Add email as test user in Google consent screen settings |
+| Commands fail without error | Check gog README for required account env var |
 
 ## Key Commands
 
 ```bash
-# Set required env vars before running commands
-export GOG_KEYRING_PASSWORD="your-keyring-password"
-export GOG_ACCOUNT="you@gmail.com"
-
 # Calendar
 gog calendar list --limit 10
 gog calendar create primary --summary "Meeting" \
@@ -85,6 +80,5 @@ gog sheets read SHEET_ID --range "Sheet1!A1:D10"
 Google refresh tokens don't expire as long as:
 - Not manually revoked in Google Account settings
 - The app is used at least once every 6 months (for unpublished apps)
-- No new authorization was made (can invalidate old token)
 
 gog handles access token refresh automatically.
